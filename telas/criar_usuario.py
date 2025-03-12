@@ -50,5 +50,5 @@ class CriarUsuarioScreen:
         #criar_usuario(nome, username, password)  # Exemplo com banco de dados
         messagebox.showinfo("Sucesso", f"Usuário '{username}' criado!")
         self.frame.destroy()
-        from login import LoginScreen
+        from telas.login import LoginScreen
         LoginScreen(self.root, lambda: print("Login após cadastro")) # volta para login
