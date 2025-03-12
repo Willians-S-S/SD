@@ -39,6 +39,6 @@ class LoginScreen:
             messagebox.showerror("Erro", "Credenciais inválidas.")
 
     def register(self):
-        from criar_usuario import CriarUsuarioScreen  # Importe aqui para evitar dependência circular
+        from telas.criar_usuario import CriarUsuarioScreen  # Importe aqui para evitar dependência circular
         self.frame.destroy()
         CriarUsuarioScreen(self.root)
