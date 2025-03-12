@@ -9,8 +9,8 @@ class App:
         self.root.title("Sistema de Livraria")
         self.root.geometry("800x600")
         self.current_screen = None  # Para rastrear a tela atual
-        #self.show_login_screen()
-        self.show_books()
+        self.show_login_screen()
+        # self.show_books()
 
     def show_screen(self, screen_class, *args):
         """Método genérico para trocar telas, aceitando argumentos extras."""
