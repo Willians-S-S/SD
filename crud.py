@@ -54,8 +54,13 @@ def read_users():
     """
     try:
         users = db.collection(USERS_COLLECTION).stream()
+        user_list = []
         for user in users:
-            print(f"{user.id}: {user.to_dict()}")
+            user_dic = user.to_dict()
+            user_dic["id"] = user.id
+            user_list.append(user_dic)
+        
+        return user_list
     except Exception as e:
         print(f"Erro ao listar usuários: {e}")
 

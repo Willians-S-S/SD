@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
-#from database import criar_usuario  # Se usar banco de dados
+from crud import create_user
 
 class CriarUsuarioScreen:
     def __init__(self, root):
@@ -8,47 +8,47 @@ class CriarUsuarioScreen:
         self.frame = tk.Frame(root)
         self.frame.pack()
 
-        # Labels e Entrys para nome, usuário, senha, confirmação de senha
-        self.label_nome = tk.Label(self.frame, text="Nome Completo:")
-        self.label_nome.pack()
-        self.entry_nome = tk.Entry(self.frame)
-        self.entry_nome.pack()
+        tk.Label(self.frame, text="Nome Completo:").pack()
+        self.entry_name = tk.Entry(self.frame)
+        self.entry_name.pack()
 
-        self.label_username = tk.Label(self.frame, text="nome de Usuário:")
-        self.label_username.pack()
-        self.entry_username = tk.Entry(self.frame)
-        self.entry_username.pack()
+        tk.Label(self.frame, text="Email:").pack()
+        self.entry_email = tk.Entry(self.frame)
+        self.entry_email.pack()
 
-        self.label_password = tk.Label(self.frame, text="Senha:")
-        self.label_password.pack()
+        tk.Label(self.frame, text="Senha:").pack()
         self.entry_password = tk.Entry(self.frame, show="*")
         self.entry_password.pack()
-        
-        self.label_conf_password = tk.Label(self.frame, text="Confirmar Senha:")
-        self.label_conf_password.pack()
+
+        tk.Label(self.frame, text="Confirmar Senha:").pack()
         self.entry_conf_password = tk.Entry(self.frame, show="*")
         self.entry_conf_password.pack()
 
+        tk.Button(self.frame, text="Criar Usuário", command=self.create).pack()
 
-        self.button_criar = tk.Button(self.frame, text="Criar Usuário", command=self.criar)
-        self.button_criar.pack()
+    def create(self):
+        name = self.entry_name.get().strip()
+        email = self.entry_email.get().strip()
+        password = self.entry_password.get().strip()
+        conf_password = self.entry_conf_password.get().strip()
 
-    def criar(self):
-        nome = self.entry_nome.get()
-        username = self.entry_username.get()
-        password = self.entry_password.get()
-        conf_password = self.entry_conf_password.get()
+        if not name or not email or not password or not conf_password:
+            messagebox.showerror("Erro", "Preencha todos os campos.")
+            return
 
         if password != conf_password:
             messagebox.showerror("Erro", "As senhas não coincidem.")
             return
-        
+
         if len(password) < 4:
-            messagebox.showerror("Erro", "Senha muito curta, minimo 4 caracteres.")
+            messagebox.showerror("Erro", "Senha muito curta (mínimo 4 caracteres).")
             return
 
-        #criar_usuario(nome, username, password)  # Exemplo com banco de dados
-        messagebox.showinfo("Sucesso", f"Usuário '{username}' criado!")
-        self.frame.destroy()
-        from telas.login import LoginScreen
-        LoginScreen(self.root, lambda: print("Login após cadastro")) # volta para login
+        try:
+            create_user(name, email, password)
+            messagebox.showinfo("Sucesso", f"Usuário '{name}' criado com sucesso!")
+            self.frame.destroy()
+            from telas.login import LoginScreen
+            LoginScreen(self.root, lambda: print("Login após cadastro"))
+        except Exception as e:
+            messagebox.showerror("Erro", f"Erro ao criar usuário: {e}")

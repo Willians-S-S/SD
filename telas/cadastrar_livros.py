@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
-# from database import adicionar_livro
+from crud import create_book
 
 class CadastrarLivroScreen:
     def __init__(self, root):
@@ -8,34 +8,41 @@ class CadastrarLivroScreen:
         self.frame = tk.Frame(root)
         self.frame.pack()
 
-        # Labels e Entrys para título, autor, ano, etc.
-        self.label_titulo = tk.Label(self.frame, text="Título:")
-        self.label_titulo.pack()
-        self.entry_titulo = tk.Entry(self.frame)
-        self.entry_titulo.pack()
+        tk.Label(self.frame, text="Título:").pack()
+        self.entry_title = tk.Entry(self.frame)
+        self.entry_title.pack()
 
-        self.label_autor = tk.Label(self.frame, text="Autor:")
-        self.label_autor.pack()
-        self.entry_autor = tk.Entry(self.frame)
-        self.entry_autor.pack()
+        tk.Label(self.frame, text="Autor:").pack()
+        self.entry_author = tk.Entry(self.frame)
+        self.entry_author.pack()
 
-        self.label_ano = tk.Label(self.frame, text="Ano:")
-        self.label_ano.pack()
-        self.entry_ano = tk.Entry(self.frame)
-        self.entry_ano.pack()
-        
+        tk.Label(self.frame, text="Páginas:").pack()
+        self.entry_pages = tk.Entry(self.frame)
+        self.entry_pages.pack()
 
-        self.button_cadastrar = tk.Button(self.frame, text="Cadastrar", command=self.cadastrar)
-        self.button_cadastrar.pack()
+        tk.Label(self.frame, text="Ano:").pack()
+        self.entry_year = tk.Entry(self.frame)
+        self.entry_year.pack()
 
-    def cadastrar(self):
-        titulo = self.entry_titulo.get()
-        autor = self.entry_autor.get()
-        ano = self.entry_ano.get()
+        tk.Button(self.frame, text="Cadastrar", command=self.add_book).pack()
 
-        # if adicionar_livro(titulo, autor, ano): #Com banco de dados
-        if titulo and autor and ano:  # Verificação simples
-            messagebox.showinfo("Sucesso", "Livro cadastrado!")
-            self.frame.destroy()
-        else:
+    def add_book(self):
+        title = self.entry_title.get().strip()
+        author = self.entry_author.get().strip()
+        pages = self.entry_pages.get().strip()
+        year = self.entry_year.get().strip()
+
+        if not title or not author or not pages or not year:
             messagebox.showerror("Erro", "Preencha todos os campos.")
+            return
+
+        try:
+            pages = int(pages)
+            year = int(year)
+            create_book(title, author, pages, year)
+            messagebox.showinfo("Sucesso", "Livro cadastrado com sucesso!")
+            self.frame.destroy()
+        except ValueError:
+            messagebox.showerror("Erro", "Páginas e Ano devem ser números válidos.")
+        except Exception as e:
+            messagebox.showerror("Erro", f"Erro ao cadastrar livro: {e}")
