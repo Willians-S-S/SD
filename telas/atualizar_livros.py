@@ -3,18 +3,18 @@ from tkinter import messagebox, simpledialog # Importe simpledialog
 # from database import buscar_livro_por_id, atualizar_livro
 
 class AtualizarLivroScreen:
-    def __init__(self, root):
+    def __init__(self, root, id):
         self.root = root
         self.frame = tk.Frame(root)
         self.frame.pack()
         
-        self.livro_id = None  # Armazena o ID do livro a ser atualizado
+        self.livro_id = id  # Armazena o ID do livro a ser atualizado
         self.carregar_campos()
 
 
     def carregar_campos(self):
         # Primeiro, peça o ID do livro a ser atualizado
-        self.livro_id = simpledialog.askinteger("Atualizar Livro", "Digite o ID do livro:", parent=self.root)
+        # self.livro_id = simpledialog.askinteger("Atualizar Livro", "Digite o ID do livro:", parent=self.root)
 
         if not self.livro_id:
             messagebox.showinfo("Aviso", "Operação cancelada.")

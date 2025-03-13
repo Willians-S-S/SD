@@ -1,7 +1,9 @@
 import tkinter as tk
 from tkinter import messagebox
-# from database import validar_credenciais  # Se usar banco de dados
 
+from telas.listar_livros import ListarLivrosScreen
+
+from crud import login_user
 
 class LoginScreen:
     def __init__(self, root, on_success):
@@ -28,15 +30,22 @@ class LoginScreen:
 
 
     def login(self):
-        username = self.entry_username.get()
+        email = self.entry_username.get()
         password = self.entry_password.get()
 
-        # if validar_credenciais(username, password):   # Exemplo com banco de dados
-        if username == "admin" and password == "123":  # Exemplo SIMPLES
+        if email == "" or email == " " or password == "" or password ==" ":
+             messagebox.showerror("Erro", "Credenciais inválidas.")
+             return 
+       
+        response = login_user(email=email, password=password)
+        if response:
             self.on_success()  # Chama a função de sucesso do main.py
-            self.frame.destroy() # Fecha janela login
-        else:
-            messagebox.showerror("Erro", "Credenciais inválidas.")
+            self.frame.destroy() #
+            return
+            ListarLivrosScreen(self.root)
+            self.frame.destroy()  # Remove a tela atual
+        
+        messagebox.showerror("Erro", "Credenciais inválidas.")
 
     def register(self):
         from telas.criar_usuario import CriarUsuarioScreen  # Importe aqui para evitar dependência circular

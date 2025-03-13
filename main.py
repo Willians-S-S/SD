@@ -3,6 +3,7 @@ from telas.login import LoginScreen
 from telas.cadastrar_livros import CadastrarLivroScreen
 from telas.atualizar_livros import AtualizarLivroScreen
 from telas.listar_livros import ListarLivrosScreen
+
 class App:
     def __init__(self, root):
         self.root = root
@@ -20,10 +21,11 @@ class App:
         self.current_screen = screen_class(self.root, *args)  # Instancia a nova tela
 
     def show_login_screen(self):
-        self.show_screen(LoginScreen, self.on_login_success)  # Passa o callback corretamente
+        flag = self.show_screen(LoginScreen, self.on_login_success)  # Passa o callback corretamente
 
     def show_add_books(self):
         self.show_screen(CadastrarLivroScreen)
+
     def show_update_books(self):
         self.show_screen(AtualizarLivroScreen)
 
@@ -32,7 +34,7 @@ class App:
 
     def on_login_success(self):
         print("Login bem-sucedido!")
-        self.show_add_books()  # Após login, mostra a tela de cadastro de livros
+        self.show_books()  # Após login, mostra a tela de cadastro de livros
 
 if __name__ == "__main__":
     root = tk.Tk()

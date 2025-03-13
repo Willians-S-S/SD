@@ -1,6 +1,8 @@
 import tkinter as tk
 from tkinter import messagebox, simpledialog
-# from database import buscar_todos_os_livros, deletar_livro
+
+from telas.atualizar_livros import AtualizarLivroScreen
+from crud import read_books
 
 class ListarLivrosScreen:
     def __init__(self, root):
@@ -10,30 +12,26 @@ class ListarLivrosScreen:
         self.carregar_livros()
     
     def carregar_livros(self):
-        # Simulação de dados (substituir pelo banco de dados)
-        livros = [
-            {"id": 1, "titulo": "Livro A", "autor": "Autor 1", "paginas": 200, "ano": 2020},
-            {"id": 2, "titulo": "Livro B", "autor": "Autor 2", "paginas": 150, "ano": 2018},
-            {"id": 3, "titulo": "Livro C", "autor": "Autor 3", "paginas": 300, "ano": 2022}
-        ]
-        # livros = buscar_todos_os_livros()  # Banco de dados
+        livros = read_books()
 
         if not livros:
             messagebox.showinfo("Aviso", "Nenhum livro encontrado.")
             self.frame.destroy()
             return
+        
+        i = 1
+        for livro in livros:
 
-        for i, livro in enumerate(livros):
-            lbl_titulo = tk.Label(self.frame, text=livro['titulo'], width=20, borderwidth=1, relief="solid")
+            lbl_titulo = tk.Label(self.frame, text=livro['title'], width=20, borderwidth=1, relief="solid")
             lbl_titulo.grid(row=i, column=0, sticky="nsew")
             
-            lbl_autor = tk.Label(self.frame, text=livro['autor'], width=20, borderwidth=1, relief="solid")
+            lbl_autor = tk.Label(self.frame, text=livro['author'], width=20, borderwidth=1, relief="solid")
             lbl_autor.grid(row=i, column=1, sticky="nsew")
             
-            lbl_paginas = tk.Label(self.frame, text=f"{livro['paginas']} pág.", width=15, borderwidth=1, relief="solid")
+            lbl_paginas = tk.Label(self.frame, text=f"{livro['pages']} pág.", width=15, borderwidth=1, relief="solid")
             lbl_paginas.grid(row=i, column=2, sticky="nsew")
             
-            lbl_ano = tk.Label(self.frame, text=livro['ano'], width=10, borderwidth=1, relief="solid")
+            lbl_ano = tk.Label(self.frame, text=livro['year'], width=10, borderwidth=1, relief="solid")
             lbl_ano.grid(row=i, column=3, sticky="nsew")
             
             btn_editar = tk.Button(self.frame, text="Editar", command=lambda id=livro['id']: self.editar_livro(id))
@@ -41,10 +39,10 @@ class ListarLivrosScreen:
             
             btn_deletar = tk.Button(self.frame, text="Deletar", command=lambda id=livro['id']: self.deletar_livro(id))
             btn_deletar.grid(row=i, column=5, sticky="nsew")
+            i += 1
     
     def editar_livro(self, livro_id):
-        from atualizar_livro_screen import AtualizarLivroScreen  # Importação para evitar loop
-        AtualizarLivroScreen(self.root)
+        AtualizarLivroScreen(self.root, livro_id)
 
     def deletar_livro(self, livro_id):
         resposta = messagebox.askyesno("Confirmar", "Tem certeza que deseja excluir este livro?")
