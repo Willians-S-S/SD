@@ -2,7 +2,7 @@ import firebase_admin
 from firebase_admin import credentials, firestore, auth
 
 # Configurar Firebase
-cred = credentials.Certificate("C:/Users/Ueslei/Documents/projetos/SD/cred2.json")
+cred = credentials.Certificate("T:\Github\SD\cred2.json")
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
