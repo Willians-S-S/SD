@@ -1,66 +1,79 @@
 import tkinter as tk
-from tkinter import messagebox, simpledialog # Importe simpledialog
-# from database import buscar_livro_por_id, atualizar_livro
+from tkinter import messagebox
+from crud import update_book, read_books
+# from telas.listar_livros import ListarLivrosScreen  # Importa a tela de listagem de livros
 
 class AtualizarLivroScreen:
-    def __init__(self, root, id):
+    def __init__(self, root, book_id):
         self.root = root
+        self.book_id = book_id  # ID do livro a ser atualizado
         self.frame = tk.Frame(root)
         self.frame.pack()
-        
-        self.livro_id = id  # Armazena o ID do livro a ser atualizado
+        self.entries = {}  # Armazena os campos de entrada dinamicamente
         self.carregar_campos()
 
-
     def carregar_campos(self):
-        # Primeiro, peça o ID do livro a ser atualizado
-        # self.livro_id = simpledialog.askinteger("Atualizar Livro", "Digite o ID do livro:", parent=self.root)
+        """Carrega os campos de entrada com base nos dados atuais do livro."""
+        try:
+            # Busca os dados do livro no Firestore
+            livros = read_books()
+            livro = next((livro for livro in livros if livro["id"] == self.book_id), None)
 
-        if not self.livro_id:
-            messagebox.showinfo("Aviso", "Operação cancelada.")
-            self.frame.destroy()
-            return
+            if not livro:
+                messagebox.showerror("Erro", "Livro n�o encontrado.")
+                self.frame.destroy()
+                return
 
+            # Cria dinamicamente os campos de entrada com base nos dados do livro
+            row = 0
+            for field, value in livro.items():
+                if field == "id":  # Ignora o campo 'id', pois n�o � edit�vel
+                    continue
 
-        # livro = buscar_livro_por_id(self.livro_id) # Ex. com banco de dados
-        livro = {"id": self.livro_id, "titulo": "Exemplo", "autor": "Autor X", "ano": 2023}  # DADOS DE EXEMPLO!
+                label = tk.Label(self.frame, text=f"{field.capitalize()}:")
+                label.grid(row=row, column=0, sticky="w")
 
-        if not livro:
-            messagebox.showerror("Erro", "Livro não encontrado.")
-            self.frame.destroy()
-            return
+                entry = tk.Entry(self.frame)
+                entry.insert(0, value)  # Preenche o campo com o valor atual
+                entry.grid(row=row, column=1, sticky="ew")
 
+                self.entries[field] = entry  # Armazena o campo no dicion�rio
+                row += 1
 
-        # Crie os campos de entrada PREENCHIDOS com os dados atuais
-        self.label_titulo = tk.Label(self.frame, text="Título:")
-        self.label_titulo.pack()
-        self.entry_titulo = tk.Entry(self.frame)
-        self.entry_titulo.insert(0, livro["titulo"])  # Preenche o campo
-        self.entry_titulo.pack()
+            # Bot�o para atualizar
+            btn_atualizar = tk.Button(self.frame, text="Atualizar", command=self.atualizar)
+            btn_atualizar.grid(row=row, column=0, columnspan=2, pady=10)
 
-        self.label_autor = tk.Label(self.frame, text="Autor:")
-        self.label_autor.pack()
-        self.entry_autor = tk.Entry(self.frame)
-        self.entry_autor.insert(0, livro["autor"])  # Preenche
-        self.entry_autor.pack()
-        
-        self.label_ano = tk.Label(self.frame, text="Ano:")
-        self.label_ano.pack()
-        self.entry_ano = tk.Entry(self.frame)
-        self.entry_ano.insert(0, livro["ano"])
-        self.entry_ano.pack()
-
-        self.button_atualizar = tk.Button(self.frame, text="Atualizar", command=self.atualizar)
-        self.button_atualizar.pack()
+        except Exception as e:
+            messagebox.showerror("Erro", f"Erro ao carregar dados do livro: {e}")
 
     def atualizar(self):
-        titulo = self.entry_titulo.get()
-        autor = self.entry_autor.get()
-        ano = self.entry_ano.get()
+        """Coleta os campos preenchidos e atualiza o livro no Firestore."""
+        updates = {}  # Dicionário para armazenar os campos a serem atualizados
 
-        # if atualizar_livro(self.livro_id, titulo, autor, ano):  # Banco
-        if titulo and autor and ano:
-            messagebox.showinfo("Sucesso", "Livro atualizado!")
+        # Coleta os campos que foram modificados
+        for field, entry in self.entries.items():
+            new_value = entry.get().strip()
+            if new_value:  # Apenas campos preenchidos são considerados
+                updates[field] = new_value
+
+        if not updates:
+            messagebox.showerror("Erro", "Nenhum campo foi preenchido para atualização.")
+            return
+
+        try:
+            # Atualiza o livro no Firestore
+            for field, new_value in updates.items():
+                update_book(self.book_id, field, new_value)
+
+            messagebox.showinfo("Sucesso", "Livro atualizado com sucesso!")
+
             self.frame.destroy()
-        else:
-            messagebox.showerror("Erro", "Preencha todos os campos.")
+            
+            # Redireciona para a tela de listagem de livros usando a navegação centralizada
+            from main import App  # Importe a classe principal
+            app = App(self.root)
+            app.show_books()
+
+        except Exception as e:
+            messagebox.showerror("Erro", f"Erro ao atualizar livro: {e}")

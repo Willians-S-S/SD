@@ -8,6 +8,7 @@ class CadastrarLivroScreen:
         self.frame = tk.Frame(root)
         self.frame.pack()
 
+        # Campos para entrada de dados
         tk.Label(self.frame, text="Título:").pack()
         self.entry_title = tk.Entry(self.frame)
         self.entry_title.pack()
@@ -24,9 +25,11 @@ class CadastrarLivroScreen:
         self.entry_year = tk.Entry(self.frame)
         self.entry_year.pack()
 
+        # Botão para cadastrar o livro
         tk.Button(self.frame, text="Cadastrar", command=self.add_book).pack()
 
     def add_book(self):
+        """Cadastra um novo livro no Firebase."""
         title = self.entry_title.get().strip()
         author = self.entry_author.get().strip()
         pages = self.entry_pages.get().strip()
@@ -37,11 +40,14 @@ class CadastrarLivroScreen:
             return
 
         try:
+            # Converte páginas e ano para inteiros
             pages = int(pages)
             year = int(year)
+
+            # Cria o livro no Firestore
             create_book(title, author, pages, year)
             messagebox.showinfo("Sucesso", "Livro cadastrado com sucesso!")
-            self.frame.destroy()
+            self.frame.destroy()  # Fecha a tela após o cadastro
         except ValueError:
             messagebox.showerror("Erro", "Páginas e Ano devem ser números válidos.")
         except Exception as e:

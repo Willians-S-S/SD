@@ -152,6 +152,31 @@ def delete_book(book_id):
     db.collection(BOOKS_COLLECTION).document(book_id).delete()
     print(f"Livro {book_id} deletado!")
 
+livros_exemplo = [
+    {"title": "Dom Casmurro", "author": "Machado de Assis", "pages": 256, "year": 1899},
+    {"title": "O Cortiço", "author": "Aluísio Azevedo", "pages": 320, "year": 1890},
+    {"title": "Memórias Póstumas de Brás Cubas", "author": "Machado de Assis", "pages": 288, "year": 1881},
+    {"title": "Vidas Secas", "author": "Graciliano Ramos", "pages": 208, "year": 1938},
+    {"title": "Capitães da Areia", "author": "Jorge Amado", "pages": 224, "year": 1937},
+    {"title": "O Guarani", "author": "José de Alencar", "pages": 304, "year": 1857},
+    {"title": "Iracema", "author": "José de Alencar", "pages": 192, "year": 1865},
+    {"title": "A Hora da Estrela", "author": "Clarice Lispector", "pages": 128, "year": 1977},
+    {"title": "O Crime do Padre Amaro", "author": "Eça de Queirós", "pages": 416, "year": 1875},
+    {"title": "Cem Anos de Solidão", "author": "Gabriel García Márquez", "pages": 448, "year": 1967},
+]
+
+# Função para criar os livros no Firestore
+def criar_livros_exemplo():
+    for livro in livros_exemplo:
+        create_book(
+            title=livro["title"],
+            author=livro["author"],
+            pages=livro["pages"],
+            year=livro["year"]
+        )
+
+
+
 if __name__ == "__main__":
     # Exemplos de uso das funções
     # create_user("João Silva", "joao@email.com", "senha123")
@@ -159,7 +184,8 @@ if __name__ == "__main__":
     # read_user_by_id("AqnsIUHfWHTnVYI9E4lNHCQArjV2")
     # update_user("AqnsIUHfWHTnVYI9E4lNHCQArjV2", "display_name", "João da Silva")
     # delete_user("AqnsIUHfWHTnVYI9E4lNHCQArjV2")
-    print(login_user("joao@email.com", "senha123"))
+    # print(login_user("joao@email.com", "senha123"))
     # print(login_user("jo@email.com", "senha123"))
+    criar_livros_exemplo()
     pass
 
