@@ -1,7 +1,8 @@
 import tkinter as tk
 from tkinter import messagebox
-from crud import read_books, delete_book
-# from telas.atualizar_livros import AtualizarLivroScreen
+from telas.atualizar_livros import AtualizarLivroScreen
+from telas.cadastrar_livros import CadastrarLivroScreen  # Importe a tela de cadastro de livros
+from crud import read_books, delete_book  # Use a função correta do CRUD de livros
 
 class ListarLivrosScreen:
     def __init__(self, root):
@@ -35,13 +36,16 @@ class ListarLivrosScreen:
                 tk.Label(self.frame, text=livro['year']).grid(row=i, column=3, padx=5, pady=2)
                 tk.Button(self.frame, text="Editar", command=lambda id=livro['id']: self.editar_livro(id)).grid(row=i, column=4, padx=5, pady=2)
                 tk.Button(self.frame, text="Deletar", command=lambda id=livro['id']: self.deletar_livro(id)).grid(row=i, column=5, padx=5, pady=2)
+
+            # Adiciona o botão para cadastrar um novo livro
+            btn_cadastrar = tk.Button(self.frame, text="Cadastrar Livro", command=self.cadastrar_livro)
+            btn_cadastrar.grid(row=len(livros) + 1, column=0, columnspan=6, pady=10)
+
         except Exception as e:
             messagebox.showerror("Erro", f"Erro ao listar livros: {e}")
 
     def editar_livro(self, book_id):
         """Abre a tela de edição para o livro com o ID fornecido."""
-        from telas.atualizar_livros import AtualizarLivroScreen  # Importação local
-            # AtualizarLivroScreen(self.root, livro_id)
         self.frame.destroy()
         AtualizarLivroScreen(self.root, book_id)
 
@@ -55,3 +59,8 @@ class ListarLivrosScreen:
                 self.carregar_livros()  # Recarrega a lista de livros
             except Exception as e:
                 messagebox.showerror("Erro", f"Erro ao deletar livro: {e}")
+
+    def cadastrar_livro(self):
+        """Abre a tela de cadastro de livros."""
+        self.frame.destroy()
+        CadastrarLivroScreen(self.root)

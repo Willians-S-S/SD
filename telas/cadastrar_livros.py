@@ -48,6 +48,10 @@ class CadastrarLivroScreen:
             create_book(title, author, pages, year)
             messagebox.showinfo("Sucesso", "Livro cadastrado com sucesso!")
             self.frame.destroy()  # Fecha a tela após o cadastro
+            
+            from main import App  # Importe a classe principal
+            app = App(self.root)
+            app.show_books()
         except ValueError:
             messagebox.showerror("Erro", "Páginas e Ano devem ser números válidos.")
         except Exception as e:
