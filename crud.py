@@ -28,25 +28,7 @@ def create_user(name, email, password):
     db.collection(USERS_COLLECTION).document(user_record.uid).set(user_data)
     
     print(f"Usuário '{name}' criado com sucesso!")
-    # try:
-    #     # Criar usuário no Firebase Authentication
-    #     user_record = auth.create_user(
-    #         email=email,
-    #         display_name=name,
-    #         password=password
-    #     )
-        
-    #     # Salvar dados adicionais no Firestore
-    #     user_data = {
-    #         "email": email,
-    #         "display_name": name,
-    #         "password": password  # OBS: Não é recomendado salvar senhas diretamente no Firestore
-    #     }
-    #     db.collection(USERS_COLLECTION).document(user_record.uid).set(user_data)
-        
-    #     print(f"Usuário '{name}' criado com sucesso!")
-    # except Exception as e:
-    #     print(f"Erro ao criar usuário: {e}")
+    
 
 def read_users():
     """
@@ -73,7 +55,7 @@ def read_user_by_id(user_id):
         user = user_ref.get()
         
         if user.exists:
-            print(user.to_dict())
+            return user.to_dict()
         else:
             print(f"Usuário com ID '{user_id}' não encontrado.")
     except Exception as e:
