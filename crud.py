@@ -2,7 +2,7 @@ import firebase_admin
 from firebase_admin import credentials, firestore, auth
 
 # Configurar Firebase
-cred = credentials.Certificate("T:\Github\SD\cred2.json")
+cred = credentials.Certificate("C:/Users/Ueslei/Documents/projetos/SD/cred2.json")
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
@@ -84,23 +84,23 @@ def delete_user(user_id):
 
 def login_user(email, password):
     try:
-        response_ref = db.collection(USERS_COLLECTION).where('email', '==', email).stream()
+        users_ref = db.collection(USERS_COLLECTION).where('email', '==', email).limit(1).stream()
+        user_docs = list(users_ref)
         
-        for doc in response_ref:
-            response = doc.reference
-            id = doc.id
-            break
-
-        response = response.get().to_dict()
+        if not user_docs:
+            return False
         
-        if response["email"] == email and response["password"] == password:
-            return id, response
+        user_doc = user_docs[0]
+        user_data = user_doc.to_dict()
         
-        return False
-       
+        if user_data['password'] != password:
+            return False
+        
+        # Retorna o ID do documento e os dados
+        return (user_doc.id, user_data)
     except Exception as e:
-        print(f"Erro ao fazer login: {e}")
-
+        print(f"Erro no login: {e}")
+        return False
 
 
 BOOKS_COLLECTION = "books"

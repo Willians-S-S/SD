@@ -24,26 +24,19 @@ class LoginScreen:
     def login(self):
         email = self.entry_email.get().strip()
         password = self.entry_password.get().strip()
-
+        
         if not email or not password:
             messagebox.showerror("Erro", "Preencha todos os campos.")
             return
         
-        inicio = time.time()
         response = login_user(email, password)
-        fim = time.time()
-
-        print(f"Tempo de execução: {fim - inicio:.4f} segundos")
-
+        
         if response:
-            messagebox.showinfo("Sucesso", "Login realizado com sucesso!")
-            self.on_success(response[0])  # Chama a função de sucesso após o login
+            user_id, user_data = response  # Desempacota a tupla
+            self.on_success((user_id, user_data))  # Passa como tupla
             self.frame.destroy()
         else:
             messagebox.showerror("Erro", "Credenciais inválidas.")
-
-        return response[0]
-
     def register(self):
         from telas.criar_usuario import CriarUsuarioScreen
         self.frame.destroy()
