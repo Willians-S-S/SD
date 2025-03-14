@@ -1,50 +1,59 @@
 import tkinter as tk
 from tkinter import messagebox
+from crud import read_user_by_id
 
-class UserProfileScreen:
-    def __init__(self, root, user_id, user_data, on_back):
+class PerfilUsuarioScreen:
+    def __init__(self, root, usuario_atual, tela_anterior):
         self.root = root
-        self.user_id = user_id
-        self.user_data = user_data  # Dicionário com dados do usuário
-        self.on_back = on_back
-        self.frame = tk.Frame(root, borderwidth=2, relief="solid")
-        self.frame.pack(padx=10, pady=10)
+        self.usuario_atual = usuario_atual  # ID do usuário logado
+        self.tela_anterior = tela_anterior  # Referência da tela anterior
+        self.frame = tk.Frame(root)
+        self.frame.pack(padx=20, pady=20)
 
-        tk.Label(self.frame, text="Perfil do Usuário", font=("Arial", 14, "bold")).pack(pady=10)
-        
-        tk.Label(self.frame, text="Email:").pack()
-        self.entry_email = tk.Entry(self.frame)
-        self.entry_email.insert(0, user_data.get("email", ""))
-        self.entry_email.pack()
-        
-        tk.Label(self.frame, text="Nova Senha:").pack()
-        self.entry_password = tk.Entry(self.frame, show="*")
-        self.entry_password.pack()
-        
-        tk.Button(self.frame, text="Atualizar", command=self.update_profile).pack(pady=5)
-        tk.Button(self.frame, text="Voltar", command=self.go_back).pack()
-    def update_profile(self):
-        new_email = self.entry_email.get().strip()
-        new_password = self.entry_password.get().strip()
-        
-        if not new_email:
-            messagebox.showerror("Erro", "O email não pode estar vazio.")
+        # Obtém os dados do usuário
+        self.dados_usuario = read_user_by_id(self.usuario_atual)
+
+        if not self.dados_usuario:
+            messagebox.showerror(
+                "Erro", "Não foi possível carregar os dados do usuário.")
+            self.voltar()
             return
-        
-        # Atualiza no Firestore usando o ID correto
-        from crud import update_user
-        
-        if new_email != self.user_data['email']:
-            update_user(self.user_id, 'email', new_email)
-            self.user_data['email'] = new_email
-        
-        if new_password:
-            update_user(self.user_id, 'password', new_password)
-            self.user_data['password'] = new_password
-        
-        messagebox.showinfo("Sucesso", "Perfil atualizado!")
-        self.go_back()
-    def go_back(self):
-        """Retorna à tela anterior."""
+
+        # Exibição do usuário atual
+        self.lbl_usuario = tk.Label(
+            self.frame,
+            text=f"Usuário logado: {self.dados_usuario.get('display_name', 'Desconhecido')}",
+            font=('Arial', 12, 'bold'),
+            fg='black'
+        )
+        self.lbl_usuario.pack(pady=10)
+
+        # Exibição do e-mail
+        self.lbl_email = tk.Label(
+            self.frame,
+            text=f"E-mail: {self.dados_usuario.get('email', 'Não disponível')}",
+            font=('Arial', 10)
+        )
+        self.lbl_email.pack(pady=5)
+
+        # Botões
+        botoes_frame = tk.Frame(self.frame)
+        botoes_frame.pack(pady=10)
+
+        self.button_editar = tk.Button(
+            botoes_frame, text="Editar Perfil", command=self.editar, width=10)
+        self.button_editar.grid(row=0, column=1, padx=5)
+
+        self.button_cancelar = tk.Button(
+            botoes_frame, text="Voltar", command=self.voltar, width=10)
+        self.button_cancelar.grid(row=1, column=1, padx=5)
+
+    def editar(self):
+        from telas.atualizar_usuario import AtualizarUsuarioScreen
+        self.frame.pack_forget()
+        AtualizarUsuarioScreen(self.root, self.usuario_atual, self)
+
+    def voltar(self):
         self.frame.destroy()
-        self.on_back()
+        if self.tela_anterior:
+            self.tela_anterior.frame.pack()  # Recarrega a tela de listagem
