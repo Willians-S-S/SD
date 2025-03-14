@@ -1,3 +1,4 @@
+import time
 import tkinter as tk
 from tkinter import messagebox
 from crud import login_user
@@ -27,8 +28,13 @@ class LoginScreen:
         if not email or not password:
             messagebox.showerror("Erro", "Preencha todos os campos.")
             return
-
+        
+        inicio = time.time()
         response = login_user(email, password)
+        fim = time.time()
+
+        print(f"Tempo de execução: {fim - inicio:.4f} segundos")
+
         if response:
             messagebox.showinfo("Sucesso", "Login realizado com sucesso!")
             self.on_success()  # Chama a função de sucesso após o login
