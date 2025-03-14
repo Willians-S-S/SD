@@ -11,8 +11,9 @@ class App:
         self.root.geometry("800x600")
         self.current_screen = None  # Para rastrear a tela atual
         self.show_login_screen()
+        self.id_user = None
         # self.show_books()
-        
+
     def show_screen(self, screen_class, *args):
         """Método genérico para trocar telas."""
         if self.current_screen:
@@ -31,7 +32,9 @@ class App:
     def show_books(self):
         self.show_screen(ListarLivrosScreen, self.on_logout)
 
-    def on_login_success(self):
+    def on_login_success(self, id_user):
+        self.id_user = id_user
+        print(f"User id show {self.id_user}")
         print("Login bem-sucedido!")
         self.show_books()  # Após login, mostra a tela de listagem de livros
     def on_logout(self):

@@ -37,10 +37,12 @@ class LoginScreen:
 
         if response:
             messagebox.showinfo("Sucesso", "Login realizado com sucesso!")
-            self.on_success()  # Chama a função de sucesso após o login
+            self.on_success(response[0])  # Chama a função de sucesso após o login
             self.frame.destroy()
         else:
             messagebox.showerror("Erro", "Credenciais inválidas.")
+
+        return response[0]
 
     def register(self):
         from telas.criar_usuario import CriarUsuarioScreen
