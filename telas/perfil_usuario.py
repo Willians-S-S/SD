@@ -44,14 +44,23 @@ class PerfilUsuarioScreen:
             botoes_frame, text="Editar Perfil", command=self.editar, width=10)
         self.button_editar.grid(row=0, column=1, padx=5)
 
+        self.button_apagar = tk.Button(
+            botoes_frame, text="Apagar Perfil", command=self.apagar, width=10)
+        self.button_apagar.grid(row=1, column=1, padx=5)
+
         self.button_cancelar = tk.Button(
             botoes_frame, text="Voltar", command=self.voltar, width=10)
-        self.button_cancelar.grid(row=1, column=1, padx=5)
+        self.button_cancelar.grid(row=2, column=1, padx=5)
 
     def editar(self):
         from telas.atualizar_usuario import AtualizarUsuarioScreen
         self.frame.pack_forget()
         AtualizarUsuarioScreen(self.root, self.usuario_atual, self)
+
+    def apagar(self):
+        from telas.deletar_usuario import DeletarUsuarioScreen
+        self.frame.pack_forget()
+        DeletarUsuarioScreen(self.root, self.usuario_atual, self)
 
     def voltar(self):
         self.frame.destroy()

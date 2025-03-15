@@ -1,34 +1,34 @@
 import tkinter as tk
 from tkinter import messagebox
-
+from crud import delete_user
 class DeletarUsuarioScreen:
-    def __init__(self, root):
+    def __init__(self, root, usuario_atual, tela_anterior):
         self.root = root
+        self.usuario_atual = usuario_atual
+        self.tela_anterior = tela_anterior
         self.frame = tk.Frame(root)
         self.frame.pack()
-
-        # Label e Entry para confirmação do nome de usuário
-        self.label_username = tk.Label(self.frame, text="Digite seu nome de usuário para deletar a conta:")
-        self.label_username.pack()
-        self.entry_username = tk.Entry(self.frame)
-        self.entry_username.pack()
 
         self.button_deletar = tk.Button(self.frame, text="Deletar Conta", command=self.deletar)
         self.button_deletar.pack()
 
-    def deletar(self):
-        username = self.entry_username.get().strip()
-        
-        if not username:
-            messagebox.showerror("Erro", "Digite seu nome de usuário.")
-            return
-        
-        confirmar = messagebox.askyesno("Confirmar", f"Tem certeza que deseja deletar a conta '{username}'?")
+        self.button_voltar = tk.Button(
+            self.frame, text="Cancelar", command=self.voltar)
+        self.button_voltar.pack()
+
+    def deletar(self):   
+        confirmar = messagebox.askyesno("Confirmar", f"Tem certeza que deseja deletar sua conta?")
         if confirmar:
-            # Aqui futuramente será chamada a função do Firebase para deletar
-            # deletar_usuario_firebase(username)
+            delete_user(self.usuario_atual)
             messagebox.showinfo("Sucesso", "Conta deletada com sucesso!")
             self.frame.destroy()
+            from telas.login import LoginScreen
+            LoginScreen(self.root, lambda: print(
+                f"Login após deletar"))
+
+    def voltar(self):
+        self.frame.destroy()
+        self.tela_anterior.frame.pack()
 
 # Teste da tela
 if __name__ == "__main__":
