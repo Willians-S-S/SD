@@ -14,16 +14,41 @@ Aplicativo desktop para gerenciamento de livraria desenvolvido em Python com Tki
 
 ## Como Executar
 
-1. Certifique-se de ter Python 3 instalado
-2. Instale as dependências (Tkinter geralmente vem pré-instalado):
+# 1.  Certifique-se de ter Python 3 instalado e o Git.
+
+# 2. Clone o repositório:
+   ```bash
+   git clone https://github.com/Willians-S-S/SD.git
+   ```
+
+# 3. Instale as dependências (Tkinter geralmente vem pré-instalado):
    ```bash
    pip install tk
+   pip install firebase-admin
+   ```
+# 4. Credênciais do firebase:
+   ## É necessário criar uma conta no firebase e pegar sua chave de acesso.
+   No arquivo crud.py adicione o caminho até seu arquivo com sua KEY do firebase
+   ```bash
+   cred = credentials.Certificate("caminho/para/sua/credênciais.json")
+   ```
 
-Fluxo da Aplicação:
-    Tela de Login - Após autenticação bem-sucedida, acesso à tela principal com:
-    Listagem de livros
-    Botão para cadastrar novo livro
-    Opção de editar/excluir livros existentes
-    Botão de logout
-    Botão para edição senha e nome de usuário.
+# 5. Execução do programa
+   O Terminal deve estar no diretório do arquivo main.
+   ```bash
+   python main.py
+   ```
 
+# Fluxo da Aplicação
+
+## Tela de Login
+- O usuário insere suas credenciais.
+- Após autenticação bem-sucedida, é redirecionado para a **Tela Principal**.
+
+## Tela Principal
+- **Listagem de Livros**: Exibe todos os livros cadastrados.
+- **Cadastrar Novo Livro**: Botão para adicionar um novo livro.
+- **Editar Livros**: Permite a modificação dos detalhes de um livro existente.
+- **Excluir Livros**: Opção para remover um livro do sistema.
+- **Editar Perfil**: Possibilidade de alterar senha e nome de usuário.
+- **Logout**: Finaliza a sessão do usuário e retorna à tela de login.
