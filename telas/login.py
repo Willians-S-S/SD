@@ -46,4 +46,4 @@ class LoginScreen:
     def register(self):
         from telas.criar_usuario import CriarUsuarioScreen
         self.frame.destroy()
-        CriarUsuarioScreen(self.root)
+        CriarUsuarioScreen(self.root, self.on_success)

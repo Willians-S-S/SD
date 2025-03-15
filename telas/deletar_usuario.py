@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 from crud import delete_user
+import sys
 class DeletarUsuarioScreen:
     def __init__(self, root, usuario_atual, tela_anterior):
         self.root = root
@@ -17,14 +18,14 @@ class DeletarUsuarioScreen:
         self.button_voltar.pack()
 
     def deletar(self):   
-        confirmar = messagebox.askyesno("Confirmar", f"Tem certeza que deseja deletar sua conta?")
+        confirmar = messagebox.askyesno("Confirmar", f"Tem certeza que deseja deletar sua conta? Caso delete o usuário o programa será encerrado.")
         if confirmar:
             delete_user(self.usuario_atual)
             messagebox.showinfo("Sucesso", "Conta deletada com sucesso!")
             self.frame.destroy()
-            from telas.login import LoginScreen
-            LoginScreen(self.root, lambda: print(
-                f"Login após deletar"))
+            sys.exit()
+            # from telas.criar_usuario import CriarUsuarioScreen
+            # CriarUsuarioScreen(self.root, None)
 
     def voltar(self):
         self.frame.destroy()

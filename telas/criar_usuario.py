@@ -3,10 +3,12 @@ from tkinter import messagebox
 from crud import create_user
 
 class CriarUsuarioScreen:
-    def __init__(self, root):
+    def __init__(self, root, on_success):
         self.root = root
         self.frame = tk.Frame(root)
         self.frame.pack()
+
+        self.on_success = on_success
 
         tk.Label(self.frame, text="Nome Completo:").pack()
         self.entry_name = tk.Entry(self.frame)
@@ -49,6 +51,6 @@ class CriarUsuarioScreen:
             messagebox.showinfo("Sucesso", f"Usuário '{name}' criado com sucesso!")
             self.frame.destroy()
             from telas.login import LoginScreen
-            LoginScreen(self.root, lambda: print("Login após cadastro"))
+            LoginScreen(self.root, self.on_success)
         except Exception as e:
             messagebox.showerror("Erro", f"Erro ao criar usuário: {e}")
