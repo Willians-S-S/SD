@@ -44,11 +44,18 @@ Aplicativo desktop para gerenciamento de livraria desenvolvido em Python com Tki
 ## Tela de Login
 - O usuário insere suas credenciais.
 - Após autenticação bem-sucedida, é redirecionado para a **Tela Principal**.
+![Tela Login](imgs/1_tela_de_login.png)
 
+- **Tela Cadastro**: Tela para cadastro de usuário.
+![Tela Cadastro](imgs/2_tela_cadastro_user.png)
 ## Tela Principal
 - **Listagem de Livros**: Exibe todos os livros cadastrados.
-- **Cadastrar Novo Livro**: Botão para adicionar um novo livro.
-- **Editar Livros**: Permite a modificação dos detalhes de um livro existente.
 - **Excluir Livros**: Opção para remover um livro do sistema.
-- **Editar Perfil**: Possibilidade de alterar senha e nome de usuário.
 - **Logout**: Finaliza a sessão do usuário e retorna à tela de login.
+![Tela Listagem de Livros](imgs/3_estante_livros.png)
+- **Cadastrar Novo Livro**: Botão para adicionar um novo livro.
+![Texto Alternativo](imgs/4_cadastro_livro.png)
+- **Editar Livros**: Permite a modificação dos detalhes de um livro existente.
+![Tela Listagem de Livros](imgs/5_editar_livro.png)
+- **Editar Perfil**: Possibilidade de alterar senha e nome de usuário.
+![Tela Listagem de Livros](imgs/6_editar_perfil_user.png)
