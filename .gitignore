@@ -3,3 +3,4 @@ cred.json
 *.json
 telas/__pycache__
 .venv
+upload
