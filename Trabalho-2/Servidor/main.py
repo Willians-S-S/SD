@@ -2,6 +2,8 @@ from fastapi import FastAPI, UploadFile, File
 from image import save_image
 import pygame
 
+import uvicorn
+
 app = FastAPI()
 
 @app.post("/image")
@@ -21,3 +23,11 @@ def upload_image(image: UploadFile = File(...)):
             break
     
     return {"Mensagem": "Alarme desativado"}
+
+@app.get("/teste")
+def teste():
+    return {"mensagem":"Olá, mundo!"}
+    
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
