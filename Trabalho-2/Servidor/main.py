@@ -12,7 +12,8 @@ def upload_image(image: UploadFile = File(...)):
     print(f"Imagem salva com sucesso: {image_db}")
     pygame.mixer.init()
 
-    pygame.mixer.music.load('/home/will/Documentos/UFPI/SD/Trabalho-2/Servidor/alarme/Sirene de 6 tons demonstração.mp3')
+    pygame.mixer.music.load(
+        'alarme\som.mp3')
 
     pygame.mixer.music.play()
 
