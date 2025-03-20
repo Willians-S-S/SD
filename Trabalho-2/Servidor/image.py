@@ -4,7 +4,7 @@ from typing import List
 from uuid import uuid4
 from fastapi import UploadFile
 
-IMAGE_PATH = "..\Imagens"
+IMAGE_PATH = "Imagens"
 ALLOWED_EXTENSIONS = {'.png', '.jpg', '.jpeg'}
 
 def save_image(img: UploadFile) -> str:
