@@ -23,7 +23,6 @@ Como Executar
 ```bash
 
 git clone https://github.com/Willians-S-S/SD/tree/main/Trabalho-3
-cd editor-imagens
 
 ```
 2. Instalar Dependências
