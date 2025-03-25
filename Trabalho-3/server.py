@@ -4,55 +4,6 @@ import os
 import sqlite3
 from datetime import datetime
 
-"""
-API de Processamento de Imagens com Flask
-
-Este script implementa uma aplicação web simples usando Flask que permite aos usuários 
-fazer upload de imagens, aplicar um filtro de processamento de imagem (inversão de cores) 
-e receber a imagem processada como resposta. A aplicação também registra metadados sobre 
-cada imagem enviada em um banco de dados SQLite.
-
-Funcionalidades:
-1. **Envio de Imagem**:
-   - Os usuários podem enviar um arquivo de imagem via uma requisição POST para o endpoint `/upload`.
-   - A imagem enviada é salva no diretório `uploads`.
-
-2. **Processamento de Imagem**:
-   - A imagem enviada é processada aplicando um filtro de inversão de cores utilizando a biblioteca PIL (Pillow).
-   - A imagem processada é salva no diretório `processed`.
-
-3. **Registro de Metadados**:
-   - Metadados sobre a imagem enviada (nome do arquivo, filtro aplicado, timestamp) são armazenados em um banco de dados SQLite (`images.db`).
-   - O esquema do banco de dados inclui uma tabela chamada `images` com as colunas: `id`, `filename`, `filter` e `timestamp`.
-
-4. **Envio da Imagem Processada**:
-   - Após o processamento, a aplicação envia a imagem processada de volta ao cliente como resposta.
-
-Endpoints:
-- **POST /upload**:
-  - Aceita o envio de um arquivo via o campo `file` em uma requisição multipart/form-data.
-  - Retorna o arquivo de imagem processado como resposta com o tipo MIME `image/png`.
-  - Caso nenhum arquivo seja fornecido ou o arquivo seja inválido, uma mensagem de erro adequada é retornada com código de status 400.
-
-Diretórios:
-- `uploads`: Armazena as imagens originais enviadas.
-- `processed`: Armazena as imagens após a aplicação do filtro de inversão.
-
-Banco de Dados:
-- O banco de dados SQLite `images.db` é usado para armazenar metadados sobre cada imagem enviada.
-- A tabela `images` é criada se ainda não existir, garantindo a persistência dos metadados entre execuções da aplicação.
-
-Dependências:
-- Flask: Para criar o servidor web e lidar com requisições HTTP.
-- PIL (Pillow): Para processamento de imagem (inversão de cores).
-- SQLite3: Para armazenar metadados das imagens enviadas.
-- os: Para operações de diretórios e caminhos de arquivos.
-- datetime: Para registrar o timestamp das imagens enviadas.
-
-Como Usar:
-1. Execute o script para iniciar a aplicação Flask
-"""
-
 app = Flask(__name__)
 UPLOAD_FOLDER = "uploads"
 PROCESSED_FOLDER = "processed"
