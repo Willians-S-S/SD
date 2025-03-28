@@ -25,6 +25,10 @@ def init_db():
     conn.commit()
     conn.close()
 
+@app.route("/teste", methods=["GET"])
+def teste():
+    return {"mensagem":"Olá, mundo!"}
+
 @app.route("/upload", methods=["POST"])
 def upload_image():
     if "file" not in request.files:
@@ -55,4 +59,5 @@ def upload_image():
 
 if __name__ == "__main__":
     init_db()
-    app.run(debug=True)
+    # app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
