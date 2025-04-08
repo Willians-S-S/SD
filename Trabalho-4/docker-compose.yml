@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  mestre:
+    build: ./Mestre
+    ports:
+      - "8080:8080"
+    depends_on:
+      - escravo1
+      - escravo2
+    networks:
+      - rede-sd
+
+  escravo1:
+    build: ./EscravoLetras
+    container_name: escravo1
+    networks:
+      - rede-sd
+
+  escravo2:
+    build: ./EscravoNumeros
+    container_name: escravo2
+    networks:
+      - rede-sd
+
+networks:
+  rede-sd:
+    driver: bridge
