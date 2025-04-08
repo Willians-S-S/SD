@@ -1,0 +1,6 @@
+# Ignorar arquivos compilados
+*.class
+
+# Ignorar pastas temporárias
+*/target/
+*/bin/
