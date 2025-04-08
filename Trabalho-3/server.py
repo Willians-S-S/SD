@@ -60,4 +60,4 @@ def upload_image():
 if __name__ == "__main__":
     init_db()
     # app.run(debug=True)
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='10.180.47.250', port=5000, debug=True)
