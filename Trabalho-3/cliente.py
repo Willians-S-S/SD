@@ -10,7 +10,7 @@ def upload_image():
         return
     
     with open(file_path, "rb") as file:
-        response = requests.post("http://127.0.0.1:5000/upload", files={"file": file})
+        response = requests.post("http://10.180.47.250:5000/upload", files={"file": file})
     
     if response.status_code == 200:
         original_img = Image.open(file_path)
