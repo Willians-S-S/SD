@@ -16,23 +16,23 @@ public class WorkerThread implements Runnable {
     @Override
     public void run() {
         try {
-            URL url = new URL(urlEscravo);
+            URL url = new URL(urlEscravo); // Cria a URL para o escravo
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("POST");
-            conn.setDoOutput(true);
-            conn.setRequestProperty("Content-Type", "text/plain");
+            conn.setRequestMethod("POST"); // Define o método HTTP como POST
+            conn.setDoOutput(true); // Permite enviar dados no corpo da requisição
+            conn.setRequestProperty("Content-Type", "text/plain"); // Define o tipo de conteúdo como texto simples
 
             try (OutputStream os = conn.getOutputStream()) {
-                os.write(texto.getBytes());
+                os.write(texto.getBytes()); // Envia o texto para o escravo
             }
 
             BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-            String response = reader.readLine();
-            resultado.setResultado(response);
+            String response = reader.readLine(); // Lê a resposta do escravo
+            resultado.setResultado(response); // Armazena o resultado na instância de ResultadoParcial
 
         } catch (IOException e) {
-            resultado.setResultado("Erro");
-            e.printStackTrace();
+            resultado.setResultado("Erro"); // Define o resultado como "Erro" em caso de falha
+            e.printStackTrace(); // Exibe o erro no console
         }
     }
 }
