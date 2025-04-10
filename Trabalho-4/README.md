@@ -18,9 +18,9 @@ Implementar um sistema distribuído em Java puro com a seguinte arquitetura:
 ```bash
 
 Trabalho-4/
-├── Cliente/                # GUI em Java (Swing/JavaFX)
-│   ├── tela_cliente.java
-│   ├── cliente_http.java
+├── Cliente/                # GUI em Java
+│   ├── ClienteGUI.java
+│   ├── HttpClient.java
 ├── Mestre/
 │   ├── MestreServer.java
 │   ├── WorkerThread.java
@@ -67,8 +67,8 @@ Compile e execute a GUI localmente (fora do Docker):
 ```bash
 
 cd Cliente
-javac tela_cliente.java cliente_http.java
-java tela_cliente
+javac ClienteGUI.java HttpClientp.java
+java ClienteGUI
 
 ```
 
