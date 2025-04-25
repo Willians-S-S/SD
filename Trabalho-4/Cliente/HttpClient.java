@@ -4,7 +4,7 @@ import java.net.URL;
 
 public class HttpClient {
     public static String enviarTexto(String texto) throws IOException {
-        URL url = new URL("http://localhost:8080/processar"); // ajuste conforme IP do mestre
+        URL url = new URL("http://10.180.45.127:8086/processar"); // ajuste conforme IP do mestre
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 
         conn.setRequestMethod("POST");
