@@ -1,0 +1,43 @@
+# my global config
+global:
+  scrape_interval: 15s         # Intervalo de coleta de métricas
+  evaluation_interval: 15s     # Intervalo de avaliação das regras
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []          # Adicione o endereço do seu Alertmanager
+
+# Load rules once and periodically evaluate them de acordo com o 'evaluation_interval' global.
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+# Scrape configuration
+scrape_configs:
+  # Job do Prometheus para o próprio Prometheus
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+        labels:
+          app: "prometheus"
+
+  # Job Kubernetes (nós) - Scraping apenas para 10.0.0.108:8001
+  - job_name: "kubernetes"
+    static_configs:
+      - targets: ["10.0.0.108:8001"]  # Somente este IP e porta
+        labels:
+          job: "kubernetes-node"
+          instance: "minikube-node"
+    bearer_token: "eyJhbGciOiJSUzI1NiIsImtpZCI6InBwQ2xnUFc1OTFiTVlPUTJwc0Ftb3licElBZ2NzZTdJZHFNaEo2YU92b2MifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJkZWZhdWx0Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZWNyZXQubmFtZSI6ImRlZmF1bHQtdG9rZW4iLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC5uYW1lIjoiZGVmYXVsdCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50LnVpZCI6ImRmMjEwM2E0LTgyZWQtNGMzZS1hMzE3LWIwNzkxZDA2MTc3MyIsInN1YiI6InN5c3RlbTpzZXJ2aWNlYWNjb3VudDpkZWZhdWx0OmRlZmF1bHQifQ.mvqp5xvmWbSC7VTriuzVBFmEIpj1keqzyOTQI2NY11zYHOLxgfl-P3W1KPMLrdOZGvMonfbohCcUPNXT3N-p_xex_vB6z3JaiZgVHrcn50q38ts-YfynjaybuFnOedrkx9-DGsJsZh2EbktqxNovjk7qoZt8_Ozscl3YmFjODCx8-jusd85CXNAGRJ-TAhY8KJrOFDmGtNIqgQd3cv5CnPZQz_dVqlC11d3IMt2zYkvCbJhmTLisGA5SbrsqOkF29lW7l2k8yJOz_UTls06gb7YQVsH5DqCQzlkQo4Qekta7ore7cpwcb813x7EHyVwKVU0O4jwJKciBq7_blnMD8Q"
+
+  # Job Kubernetes Pods - Scraping somente para 10.0.0.108:8001 e variações na rota
+  - job_name: "kubernetes-pods"
+    static_configs:
+      - targets: ["10.0.0.108:8001"]
+        labels:
+          job: "kubernetes-pods"
+          instance: "minikube-pods"
+    metrics_path: "/metrics"
+    bearer_token: "eyJhbGciOiJSUzI1NiIsImtpZCI6InBwQ2xnUFc1OTFiTVlPUTJwc0Ftb3licElBZ2NzZTdJZHFNaEo2YU92b2MifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJkZWZhdWx0Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZWNyZXQubmFtZSI6ImRlZmF1bHQtdG9rZW4iLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC5uYW1lIjoiZGVmYXVsdCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50LnVpZCI6ImRmMjEwM2E0LTgyZWQtNGMzZS1hMzE3LWIwNzkxZDA2MTc3MyIsInN1YiI6InN5c3RlbTpzZXJ2aWNlYWNjb3VudDpkZWZhdWx0OmRlZmF1bHQifQ.mvqp5xvmWbSC7VTriuzVBFmEIpj1keqzyOTQI2NY11zYHOLxgfl-P3W1KPMLrdOZGvMonfbohCcUPNXT3N-p_xex_vB6z3JaiZgVHrcn50q38ts-YfynjaybuFnOedrkx9-DGsJsZh2EbktqxNovjk7qoZt8_Ozscl3YmFjODCx8-jusd85CXNAGRJ-TAhY8KJrOFDmGtNIqgQd3cv5CnPZQz_dVqlC11d3IMt2zYkvCbJhmTLisGA5SbrsqOkF29lW7l2k8yJOz_UTls06gb7YQVsH5DqCQzlkQo4Qekta7ore7cpwcb813x7EHyVwKVU0O4jwJKciBq7_blnMD8Q"
