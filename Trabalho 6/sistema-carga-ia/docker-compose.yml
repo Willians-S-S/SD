@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    hostname: rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=admin123
+    ports:
+      - "5672:5672"   # RabbitMQ service
+      - "15672:15672" # Management interface
+    networks:
+      - rabbitmq-ai-network
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  generator:
+    build: ./generator
+    container_name: message_generator
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_USER=admin
+      - RABBITMQ_PASS=admin123
+      - MESSAGE_RATE=5  # Messages per second
+    volumes:
+      - ./generator/images:/app/images
+    networks:
+      - rabbitmq-ai-network
+    restart: on-failure
+
+  consumer_face:
+    build: ./consumer_face
+    container_name: face_analyzer
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_USER=admin
+      - RABBITMQ_PASS=admin123
+      - PROCESSING_TIME=3  # Seconds to process each message
+    networks:
+      - rabbitmq-ai-network
+    restart: on-failure
+
+  consumer_team:
+    build: ./consumer_team
+    container_name: team_identifier
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_USER=admin
+      - RABBITMQ_PASS=admin123
+      - PROCESSING_TIME=4  # Seconds to process each message
+    networks:
+      - rabbitmq-ai-network
+    restart: on-failure
+
+networks:
+  rabbitmq-ai-network:
+    driver: bridge
