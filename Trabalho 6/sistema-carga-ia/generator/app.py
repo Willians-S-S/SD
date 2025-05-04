@@ -11,34 +11,34 @@ from io import BytesIO
 import json
 from dotenv import load_dotenv
 
-# Configure logging
+# Configurar o logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
-# Load environment variables
+# Carregar variáveis de ambiente
 load_dotenv()
 
-# RabbitMQ configuration
+# Configuração do RabbitMQ
 RABBITMQ_HOST = os.getenv('RABBITMQ_HOST', 'rabbitmq')
 RABBITMQ_USER = os.getenv('RABBITMQ_USER', 'admin')
 RABBITMQ_PASS = os.getenv('RABBITMQ_PASS', 'admin123')
-MESSAGE_RATE = int(os.getenv('MESSAGE_RATE', 5))  # Messages per second
+MESSAGE_RATE = int(os.getenv('MESSAGE_RATE', 5))  # Mensagens por segundo
 
-# Exchange and queue configuration
+# Configuração da exchange e da fila
 EXCHANGE_NAME = 'images_exchange'
 EXCHANGE_TYPE = 'topic'
 
-# Image paths
+# Caminhos das imagens
 FACES_DIR = '/app/images/faces'
 TEAMS_DIR = '/app/images/teams'
 
 def get_image_files(directory):
-    """Get list of image files from directory"""
+    """Obter lista de arquivos de imagem do diretório"""
     if not os.path.exists(directory):
-        logger.error(f"Directory not found: {directory}")
+        logger.error(f"Diretório não encontrado: {directory}")
         return []
     
     extensions = ['*.jpg', '*.jpeg', '*.png']
@@ -50,32 +50,32 @@ def get_image_files(directory):
     return image_files
 
 def encode_image(image_path):
-    """Encode image to base64 string"""
+    """Codificar imagem para string base64"""
     try:
         with Image.open(image_path) as img:
-            # Resize to reasonable dimensions if needed
+            # Redimensionar para dimensões razoáveis, se necessário
             if max(img.size) > 800:
                 img.thumbnail((800, 800))
             
-            # Convert to RGB if needed
+            # Converter para RGB, se necessário
             if img.mode != 'RGB':
                 img = img.convert('RGB')
             
-            # Save to BytesIO object
+            # Salvar para objeto BytesIO
             buffer = BytesIO()
             img.save(buffer, format='JPEG')
             img_str = base64.b64encode(buffer.getvalue()).decode('utf-8')
             
             return img_str
     except Exception as e:
-        logger.error(f"Error encoding image {image_path}: {e}")
+        logger.error(f"Erro ao codificar imagem {image_path}: {e}")
         return None
 
 def connect_to_rabbitmq():
-    """Establish connection to RabbitMQ"""
+    """Estabelecer conexão com o RabbitMQ"""
     credentials = pika.PlainCredentials(RABBITMQ_USER, RABBITMQ_PASS)
     
-    # Retry connection if RabbitMQ is not immediately available
+    # Tentar reconectar se o RabbitMQ não estiver imediatamente disponível
     max_retries = 10
     retry_interval = 5
     
@@ -91,69 +91,69 @@ def connect_to_rabbitmq():
             return connection
         except pika.exceptions.AMQPConnectionError as e:
             if attempt < max_retries - 1:
-                logger.warning(f"Failed to connect to RabbitMQ (attempt {attempt+1}/{max_retries}). Retrying in {retry_interval} seconds...")
+                logger.warning(f"Falha ao conectar ao RabbitMQ (tentativa {attempt+1}/{max_retries}). Tentando novamente em {retry_interval} segundos...")
                 time.sleep(retry_interval)
             else:
-                logger.error(f"Failed to connect to RabbitMQ after {max_retries} attempts: {e}")
+                logger.error(f"Falha ao conectar ao RabbitMQ após {max_retries} tentativas: {e}")
                 raise
 
 def main():
-    """Main function to send messages to RabbitMQ"""
-    # Load image files
+    """Função principal para enviar mensagens para o RabbitMQ"""
+    # Carregar arquivos de imagem
     face_images = get_image_files(FACES_DIR)
     team_images = get_image_files(TEAMS_DIR)
     
     if not face_images:
-        logger.warning(f"No face images found in {FACES_DIR}")
+        logger.warning(f"Nenhuma imagem de face encontrada em {FACES_DIR}")
     if not team_images:
-        logger.warning(f"No team images found in {TEAMS_DIR}")
+        logger.warning(f"Nenhuma imagem de time encontrada em {TEAMS_DIR}")
     
     if not face_images and not team_images:
-        logger.error("No images found. Exiting.")
+        logger.error("Nenhuma imagem encontrada. Saindo.")
         return
     
-    # Connect to RabbitMQ
+    # Conectar ao RabbitMQ
     try:
         connection = connect_to_rabbitmq()
         channel = connection.channel()
         
-        # Declare exchange
+        # Declarar exchange
         channel.exchange_declare(
             exchange=EXCHANGE_NAME,
             exchange_type=EXCHANGE_TYPE,
             durable=True
         )
         
-        logger.info(f"Connected to RabbitMQ at {RABBITMQ_HOST}")
-        logger.info(f"Found {len(face_images)} face images and {len(team_images)} team images")
-        logger.info(f"Sending messages at rate of {MESSAGE_RATE} per second")
+        logger.info(f"Conectado ao RabbitMQ em {RABBITMQ_HOST}")
+        logger.info(f"Encontradas {len(face_images)} imagens de face e {len(team_images)} imagens de time")
+        logger.info(f"Enviando mensagens a uma taxa de {MESSAGE_RATE} por segundo")
         
-        # Send messages continuously
+        # Enviar mensagens continuamente
         message_count = 0
-        interval = 1.0 / MESSAGE_RATE  # Time between messages
+        interval = 1.0 / MESSAGE_RATE  # Tempo entre mensagens
         
         while True:
-            # Decide which type of image to send (alternating or random)
+            # Decidir qual tipo de imagem enviar (alternando ou aleatório)
             if random.random() < 0.5 and face_images:
-                # Face image
+                # Imagem de face
                 image_path = random.choice(face_images)
                 routing_key = "face"
                 image_type = "face"
             elif team_images:
-                # Team image
+                # Imagem de time
                 image_path = random.choice(team_images)
                 routing_key = "team"
                 image_type = "team"
             else:
-                # Fall back to whatever we have
+                # Voltar para o que tivermos
                 image_path = random.choice(face_images or team_images)
                 routing_key = "face" if image_path in face_images else "team"
                 image_type = "face" if image_path in face_images else "team"
             
-            # Encode image
+            # Codificar imagem
             encoded_image = encode_image(image_path)
             if encoded_image:
-                # Create message
+                # Criar mensagem
                 message = {
                     "type": image_type,
                     "filename": os.path.basename(image_path),
@@ -161,34 +161,34 @@ def main():
                     "timestamp": time.time()
                 }
                 
-                # Publish message
+                # Publicar mensagem
                 channel.basic_publish(
                     exchange=EXCHANGE_NAME,
                     routing_key=routing_key,
                     body=json.dumps(message),
                     properties=pika.BasicProperties(
-                        delivery_mode=2,  # make message persistent
+                        delivery_mode=2,  # tornar a mensagem persistente
                         content_type='application/json'
                     )
                 )
                 
                 message_count += 1
                 if message_count % 10 == 0:
-                    logger.info(f"Sent {message_count} messages ({routing_key}: {os.path.basename(image_path)})")
+                    logger.info(f"Enviadas {message_count} mensagens ({routing_key}: {os.path.basename(image_path)})")
                 
-                # Sleep to maintain message rate
+                # Aguardar para manter a taxa de mensagens
                 time.sleep(interval)
             
     except KeyboardInterrupt:
-        logger.info("Interrupted by user. Closing connection...")
+        logger.info("Interrompido pelo usuário. Fechando conexão...")
     except Exception as e:
-        logger.error(f"Error: {e}")
+        logger.error(f"Erro: {e}")
     finally:
         if 'connection' in locals() and connection.is_open:
             connection.close()
-            logger.info("Connection closed")
+            logger.info("Conexão fechada")
 
 if __name__ == "__main__":
-    # Wait for RabbitMQ to be fully ready
+    # Esperar que o RabbitMQ esteja totalmente pronto
     time.sleep(5)
     main()

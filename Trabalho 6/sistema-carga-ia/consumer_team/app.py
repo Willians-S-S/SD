@@ -12,29 +12,29 @@ from PIL import Image
 from io import BytesIO
 from dotenv import load_dotenv
 
-# Configure logging
+# Configurar o logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
-# Load environment variables
+# Carregar variáveis de ambiente
 load_dotenv()
 
-# RabbitMQ configuration
+# Configuração do RabbitMQ
 RABBITMQ_HOST = os.getenv('RABBITMQ_HOST', 'rabbitmq')
 RABBITMQ_USER = os.getenv('RABBITMQ_USER', 'admin')
 RABBITMQ_PASS = os.getenv('RABBITMQ_PASS', 'admin123')
-PROCESSING_TIME = int(os.getenv('PROCESSING_TIME', 4))  # Seconds per message
+PROCESSING_TIME = int(os.getenv('PROCESSING_TIME', 4))  # Segundos por mensagem
 
-# Exchange and queue configuration
+# Configuração da exchange e da fila
 EXCHANGE_NAME = 'images_exchange'
 EXCHANGE_TYPE = 'topic'
 QUEUE_NAME = 'team_identification_queue'
 ROUTING_KEY = 'team'
 
-# List of common soccer teams for identification
+# Lista de times de futebol comuns para identificação
 SOCCER_TEAMS = [
     "Barcelona", "Real Madrid", "Manchester United", "Liverpool", 
     "Bayern Munich", "Juventus", "Paris Saint-Germain", "Chelsea",
@@ -46,90 +46,68 @@ SOCCER_TEAMS = [
 ]
 
 class TeamIdentifier:
-    """Class to identify soccer team logos"""
+    """Classe para identificar logos de times de futebol"""
     
     def __init__(self):
-        """Initialize the team identifier"""
-        # Load the MobileNetV2 model pre-trained on ImageNet
-        self.base_model = tf.keras.applications.MobileNetV2(
-            weights='imagenet',
-            include_top=True,
-            input_shape=(224, 224, 3)
-        )
+        """Inicializar o identificador de times"""
+        # Carregar o modelo MobileNetV2 pré-treinado com ImageNet
+        self.model = tf.keras.applications.MobileNetV2(weights='imagenet') # Alterado para self.model
         
-        # We'll use this model for feature extraction
-        logger.info("Team identification model loaded")
+        # Usaremos este modelo para extração de características
+        logger.info("Modelo de identificação de times carregado")
         
     def preprocess_image(self, image):
-        """Preprocess image for the model"""
-        # Resize to 224x224
+        """Pré-processar a imagem para o modelo"""
+        # Redimensionar para 224x224
         image_resized = cv2.resize(image, (224, 224))
-        
-        # Convert BGR to RGB if needed
+
+        # Converter BGR para RGB, se necessário
         if len(image_resized.shape) == 3 and image_resized.shape[2] == 3:
             image_resized = cv2.cvtColor(image_resized, cv2.COLOR_BGR2RGB)
         
-        # Expand dimensions and preprocess for MobileNetV2
+        # Expandir dimensões e pré-processar para MobileNetV2
         img_array = np.expand_dims(image_resized, axis=0)
         img_array = tf.keras.applications.mobilenet_v2.preprocess_input(img_array)
         
         return img_array
     
-    def extract_features(self, preprocessed_image):
-        """Extract features from the image"""
-        features = self.base_model.predict(preprocessed_image)
-        return features
-    
-    def identify_team(self, image):
-        """Identify the soccer team from the logo"""
+    def identify_team(self, image): # Removido extract_features, pois usaremos diretamente decode_predictions
+        """Identificar o time de futebol a partir do logo"""
         try:
-            # Preprocess the image
-            preprocessed = self.preprocess_image(image)
-            
-            # Extract features
-            features = self.extract_features(preprocessed)
-            
-            # In a real system, we would match these features against a database
-            # of known team logos. For this demo, we'll simulate with random confidence.
-            
-            # Simulate classification (in real-world, use a classifier trained on team logos)
-            # We'll randomly select a team with high confidence to simulate identification
-            team_index = np.random.randint(0, len(SOCCER_TEAMS))
-            team_name = SOCCER_TEAMS[team_index]
-            
-            # Generate confidence scores (simulate a prediction)
-            confidence_scores = np.random.dirichlet(np.ones(5), size=1)[0]
-            
-            # Create top 5 predictions with confidence scores
-            top_teams = np.random.choice(SOCCER_TEAMS, size=5, replace=False)
-            predictions = [
-                {"team": team, "confidence": float(score)}
-                for team, score in zip(top_teams, confidence_scores)
-            ]
-            
-            # Sort by confidence (highest first)
-            predictions.sort(key=lambda x: x["confidence"], reverse=True)
-            
-            # Set first prediction to our "identified" team with high confidence
-            predictions[0]["team"] = team_name
-            predictions[0]["confidence"] = float(np.random.uniform(0.7, 0.95))
-            
-            # Format for return
-            return {
-                "identified_team": team_name,
-                "confidence": predictions[0]["confidence"],
-                "top_predictions": predictions
-            }
-            
-        except Exception as e:
-            logger.error(f"Error identifying team: {e}")
-            return {"error": str(e)}
+            # Pré-processar a imagem
+            img_array = self.preprocess_image(image)
 
+            # Fazer a previsão usando o modelo carregado
+            predictions = self.model.predict(img_array)
+
+            # Decodificar as top 5 previsões
+            decoded = tf.keras.applications.mobilenet_v2.decode_predictions(predictions, top=5)[0]
+
+            # Extrair os resultados formatados
+            top_predictions = []
+            for i, (imagenet_id, label, confidence) in enumerate(decoded):
+                top_predictions.append({"team": label, "confidence": float(confidence)})  # Usar o label como "team" para este exemplo
+
+            # Determinar o time identificado (usando a predição de maior confiança)
+            identified_team = top_predictions[0]["team"]
+            confidence = top_predictions[0]["confidence"]
+
+            # Formatar para retorno
+            return {
+                "identified_team": identified_team,
+                "confidence": confidence,
+                "top_predictions": top_predictions
+            }
+
+        except Exception as e:
+            logger.error(f"Erro ao identificar o time: {e}")
+            return {"error": str(e)}
+        
 def connect_to_rabbitmq():
-    """Establish connection to RabbitMQ"""
+    """Estabelecer conexão com o RabbitMQ"""
     credentials = pika.PlainCredentials(RABBITMQ_USER, RABBITMQ_PASS)
     
-    # Retry connection if RabbitMQ is not immediately available
+    # Tentar reconectar se o RabbitMQ não estiver imediatamente disponível
     max_retries = 10
     retry_interval = 5
     
@@ -145,150 +123,150 @@ def connect_to_rabbitmq():
             return connection
         except pika.exceptions.AMQPConnectionError as e:
             if attempt < max_retries - 1:
-                logger.warning(f"Failed to connect to RabbitMQ (attempt {attempt+1}/{max_retries}). Retrying in {retry_interval} seconds...")
+                logger.warning(f"Falha ao conectar ao RabbitMQ (tentativa {attempt+1}/{max_retries}). Tentando novamente em {retry_interval} segundos...")
                 time.sleep(retry_interval)
             else:
-                logger.error(f"Failed to connect to RabbitMQ after {max_retries} attempts: {e}")
+                logger.error(f"Falha ao conectar ao RabbitMQ após {max_retries} tentativas: {e}")
                 raise
 
 def decode_image(encoded_image):
-    """Decode base64 image to OpenCV format"""
+    """Decodificar imagem base64 para o formato OpenCV"""
     try:
-        # Decode base64 string
+        # Decodificar string base64
         img_data = base64.b64decode(encoded_image)
         
-        # Convert to PIL Image
+        # Converter para imagem PIL
         img = Image.open(BytesIO(img_data))
         
-        # Convert to OpenCV format (numpy array)
+        # Converter para o formato OpenCV (array numpy)
         img_cv = np.array(img)
         
-        # Convert RGB to BGR (OpenCV uses BGR)
+        # Converter RGB para BGR (OpenCV usa BGR)
         if len(img_cv.shape) == 3 and img_cv.shape[2] == 3:
             img_cv = cv2.cvtColor(img_cv, cv2.COLOR_RGB2BGR)
             
         return img_cv
     except Exception as e:
-        logger.error(f"Error decoding image: {e}")
+        logger.error(f"Erro ao decodificar a imagem: {e}")
         return None
 
 def process_message(ch, method, properties, body):
-    """Process incoming message"""
+    """Processar mensagem recebida"""
     try:
-        # Parse message
+        # Analisar mensagem
         message = json.loads(body)
         filename = message.get('filename', 'unknown')
         image_type = message.get('type', 'unknown')
         encoded_image = message.get('image')
         
         if not encoded_image:
-            logger.warning(f"Message missing image data: {filename}")
+            logger.warning(f"Mensagem faltando dados da imagem: {filename}")
             ch.basic_ack(delivery_tag=method.delivery_tag)
             return
         
-        logger.info(f"Processing team logo image: {filename}")
+        logger.info(f"Processando imagem do logo do time: {filename}")
         
-        # Decode image
+        # Decodificar imagem
         image = decode_image(encoded_image)
         if image is None:
-            logger.warning(f"Failed to decode image: {filename}")
+            logger.warning(f"Falha ao decodificar a imagem: {filename}")
             ch.basic_ack(delivery_tag=method.delivery_tag)
             return
         
-        # Process with team identifier
+        # Processar com o identificador de times
         start_time = time.time()
         team_result = team_identifier.identify_team(image)
         
-        # Log result
+        # Registrar resultado
         if 'error' in team_result:
-            logger.warning(f"Failed to identify team in {filename}: {team_result['error']}")
+            logger.warning(f"Falha ao identificar o time em {filename}: {team_result['error']}")
         else:
             team_name = team_result['identified_team']
             confidence = team_result['confidence']
             top_predictions = team_result['top_predictions']
             
-            logger.info(f"Team identification for {filename}: {team_name} (Confidence: {confidence:.1%})")
+            logger.info(f"Identificação do time para {filename}: {team_name} (Confiança: {confidence:.1%})")
             
-            # Log top 3 predictions
+            # Registrar as 3 principais previsões
             top3 = top_predictions[:3]
             top3_formatted = [f"{pred['team']} ({pred['confidence']:.1%})" for pred in top3]
-            logger.info(f"Top 3 predictions: {', '.join(top3_formatted)}")
+            logger.info(f"Top 3 previsões: {', '.join(top3_formatted)}")
         
-        # Simulate slow processing to ensure queue buildup
+        # Simular processamento lento para garantir o acúmulo na fila
         elapsed = time.time() - start_time
         sleep_time = max(0, PROCESSING_TIME - elapsed)
         if sleep_time > 0:
-            logger.debug(f"Sleeping for {sleep_time:.2f}s to simulate slow processing")
+            logger.debug(f"Dormindo por {sleep_time:.2f}s para simular processamento lento")
             time.sleep(sleep_time)
         
-        # Acknowledge message
+        # Confirmar mensagem
         ch.basic_ack(delivery_tag=method.delivery_tag)
         
     except json.JSONDecodeError:
-        logger.error("Failed to decode JSON message")
+        logger.error("Falha ao decodificar a mensagem JSON")
         ch.basic_ack(delivery_tag=method.delivery_tag)
     except Exception as e:
-        logger.error(f"Error processing message: {e}")
-        # Acknowledge even on error to avoid clogging the queue
+        logger.error(f"Erro ao processar a mensagem: {e}")
+        # Confirmar mesmo em caso de erro para evitar o congestionamento da fila
         ch.basic_ack(delivery_tag=method.delivery_tag)
 
 def main():
-    """Main function to consume messages from RabbitMQ"""
+    """Função principal para consumir mensagens do RabbitMQ"""
     try:
-        # Initialize team identifier
+        # Inicializar o identificador de times
         global team_identifier
         team_identifier = TeamIdentifier()
         
-        # Connect to RabbitMQ
+        # Conectar ao RabbitMQ
         connection = connect_to_rabbitmq()
         channel = connection.channel()
         
-        # Declare exchange
+        # Declarar exchange
         channel.exchange_declare(
             exchange=EXCHANGE_NAME,
             exchange_type=EXCHANGE_TYPE,
             durable=True
         )
         
-        # Declare queue
+        # Declarar fila
         channel.queue_declare(
             queue=QUEUE_NAME,
             durable=True
         )
         
-        # Bind queue to exchange with routing key
+        # Ligar fila à exchange com a chave de roteamento
         channel.queue_bind(
             exchange=EXCHANGE_NAME,
             queue=QUEUE_NAME,
             routing_key=ROUTING_KEY
         )
         
-        # Set QoS - only process one message at a time
+        # Definir QoS - processar apenas uma mensagem por vez
         channel.basic_qos(prefetch_count=1)
         
-        # Start consuming
+        # Começar a consumir
         channel.basic_consume(
             queue=QUEUE_NAME,
             on_message_callback=process_message
         )
         
-        logger.info(f"Connected to RabbitMQ at {RABBITMQ_HOST}")
-        logger.info(f"Consuming messages from queue: {QUEUE_NAME}")
-        logger.info(f"Processing time per message: {PROCESSING_TIME}s")
-        logger.info("Waiting for messages. To exit press CTRL+C")
+        logger.info(f"Conectado ao RabbitMQ em {RABBITMQ_HOST}")
+        logger.info(f"Consumindo mensagens da fila: {QUEUE_NAME}")
+        logger.info(f"Tempo de processamento por mensagem: {PROCESSING_TIME}s")
+        logger.info("Aguardando mensagens. Para sair, pressione CTRL+C")
         
         channel.start_consuming()
         
     except KeyboardInterrupt:
-        logger.info("Interrupted by user. Closing connection...")
+        logger.info("Interrompido pelo usuário. Fechando conexão...")
         if 'connection' in locals() and connection.is_open:
             connection.close()
     except Exception as e:
-        logger.error(f"Error: {e}")
+        logger.error(f"Erro: {e}")
         if 'connection' in locals() and connection.is_open:
             connection.close()
 
 if __name__ == "__main__":
-    # Wait for RabbitMQ to be fully ready
+    # Esperar que o RabbitMQ esteja totalmente pronto
     time.sleep(10)
     main()
