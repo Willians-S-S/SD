@@ -22,10 +22,10 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 
 # Configuração do RabbitMQ
-RABBITMQ_HOST = os.getenv('RABBITMQ_HOST', 'rabbitmq')
-RABBITMQ_USER = os.getenv('RABBITMQ_USER', 'admin')
-RABBITMQ_PASS = os.getenv('RABBITMQ_PASS', 'admin123')
-MESSAGE_RATE = int(os.getenv('MESSAGE_RATE', 5))  # Mensagens por segundo
+RABBITMQ_HOST = os.getenv('RABBITMQ_HOST')
+RABBITMQ_USER = os.getenv('RABBITMQ_USER')
+RABBITMQ_PASS = os.getenv('RABBITMQ_PASS')
+MESSAGE_RATE = int(os.getenv('MESSAGE_RATE'))  # Mensagens por segundo
 
 # Configuração da exchange e da fila
 EXCHANGE_NAME = 'images_exchange'
