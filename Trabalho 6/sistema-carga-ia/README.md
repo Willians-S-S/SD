@@ -64,8 +64,23 @@ Todos os serviços estão conectados na mesma rede Docker chamada `rabbitmq-ai-n
 2. **Monitorar o Sistema**:
    
    - Acesse o painel do RabbitMQ: http://localhost:15672 (user: admin, pass: admin123)
+   
    - Para observar os logs dos containers para ver os resultados das análises de IA, utilize o comando:
      
      ```bash
      docker-compose logs -f
      ```
+
+3. **Imagens do RabbitMQ**
+   
+   - Canais
+     ![Canais](canais.png)
+   
+   - Exchanges
+     ![Canais](exchanges1.png)
+     ![Canais](exchanges2.png)
+   
+   - Filas
+     ![Filas](queues1.png)
+     ![Filas](queues2.png)
+     ![Filas](queue3.png)
