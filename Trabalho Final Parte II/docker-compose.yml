@@ -1,0 +1,229 @@
+services:
+  source:
+    build: .
+    container_name: pasid_refactor_source
+    command: sh -c "python source.py > /app/logs/source.log 2>&1"
+    ports:
+      - "${SOURCE_LISTEN_PORT_HOST}:${SOURCE_LISTEN_PORT_CONTAINER}"
+    networks:
+      - pasid_refactor_net
+    environment: # Variáveis para config.py e para o próprio source.py
+      - DOCKER_ENV=${DOCKER_ENV:-true}
+      - SOURCE_RUN_MODE=${SOURCE_RUN_MODE:-experiment}
+      - REQUEST_COUNT=${REQUEST_COUNT} 
+      - SOURCE_INTERVAL_BETWEEN_REQUESTS=${SOURCE_INTERVAL_BETWEEN_REQUESTS}
+      - SOURCE_LISTEN_PORT_CONTAINER=${SOURCE_LISTEN_PORT_CONTAINER}
+      - LB1_LISTEN_PORT=${LB1_LISTEN_PORT}
+      - LB2_LISTEN_PORT=${LB2_LISTEN_PORT} # Necessário para config.py mesmo se lb2 não estiver ativo
+      - CAMINHO_MODELO_BERT_HOST_ENV=${CAMINHO_MODELO_BERT_HOST_ENV}
+      - S2_STATE_DICT_FILENAME=${S2_STATE_DICT_FILENAME}
+      - S2_BERT_MODEL_NAME=${S2_BERT_MODEL_NAME}
+      - S2_NUM_CLASSES=${S2_NUM_CLASSES}
+      - S2_MAX_LEN=${S2_MAX_LEN}
+      - SOURCE_PREP_TIME=${SOURCE_PREP_TIME}
+      - SOURCE_COMPILE_TIME=${SOURCE_COMPILE_TIME}
+      # Nomes dos serviços para config.py DOCKER_SERVICE_NAMES
+      - SOURCE_SERVICE_NAME=${SOURCE_SERVICE_NAME:-source}
+      - LB1_SERVICE_NAME=${LB1_SERVICE_NAME:-lb1}
+      - S1_1_SERVICE_NAME=${S1_1_SERVICE_NAME:-s1_1}
+      - S1_2_SERVICE_NAME=${S1_2_SERVICE_NAME:-s1_2}
+      - LB2_SERVICE_NAME=${LB2_SERVICE_NAME:-lb2}
+      - S2_1_SERVICE_NAME=${S2_1_SERVICE_NAME:-s2_1}
+      - S2_2_SERVICE_NAME=${S2_2_SERVICE_NAME:-s2_2}
+    depends_on: 
+      lb1: { condition: service_started }
+      # Outras dependências são gerenciadas implicitamente pelos perfis
+    volumes:
+      - ./logs:/app/logs
+
+  lb1: # Sempre ativo
+    build: .
+    container_name: pasid_refactor_lb1
+    command: >
+      python loadbalancer.py
+      --name "${LB1_NAME_TAG:-LoadBalancer1_Nó02}"
+      --port ${LB1_LISTEN_PORT}
+      --ptime ${LB1_PROC_TIME}
+      --targets "${EXPERIMENT_LB1_TARGETS}" # Definido dinamicamente pelo orquestrador via .env
+    networks:
+      - pasid_refactor_net
+    environment:
+      - DOCKER_ENV=${DOCKER_ENV:-true}
+      - LB1_NAME_TAG=${LB1_NAME_TAG:-LoadBalancer1_Nó02}
+      - LB1_LISTEN_PORT=${LB1_LISTEN_PORT}
+      - LB1_PROC_TIME=${LB1_PROC_TIME}
+      - EXPERIMENT_LB1_TARGETS # Valor do orquestrador via .env
+      # Portas e Nomes necessários para substituição dentro de EXPERIMENT_LB1_TARGETS
+      - S1_1_LISTEN_PORT=${S1_1_LISTEN_PORT}
+      - S1_2_LISTEN_PORT=${S1_2_LISTEN_PORT}
+      - S1_1_SERVICE_NAME=${S1_1_SERVICE_NAME:-s1_1}
+      - S1_2_SERVICE_NAME=${S1_2_SERVICE_NAME:-s1_2}
+    depends_on:
+      s1_1: { condition: service_started } # s1_1 é sempre um alvo potencial
+
+  s1_1: # Sempre ativo se lb1 estiver
+    build: .
+    container_name: pasid_refactor_s1_1
+    command: >
+      python service.py
+      --name "${S1_1_NAME_TAG:-Service1.1_Nó02}"
+      --port ${S1_1_LISTEN_PORT}
+      --ptime_no_ia ${S1_1_PROC_TIME}
+      ${EXPERIMENT_S1_1_NEXT_HOST_CMD_ARG}    # Ex: --next_host nome_servico
+      ${EXPERIMENT_S1_1_NEXT_PORT_CMD_ARG}    # Ex: --next_port porta
+      ${EXPERIMENT_S1_1_IS_FINAL_CMD_FLAG}    # Ex: --is_final ou vazio
+      ${EXPERIMENT_S1_1_HAS_IA_CMD_FLAG}      # Ex: --has_ia ou vazio (deve ser vazio para s1_1)
+      --transit_time ${S1_1_TRANSIT_TIME_TO_NEXT}
+      --final_target_host "${SOURCE_SERVICE_NAME:-source}" 
+      --final_target_port ${SOURCE_LISTEN_PORT_CONTAINER}
+    networks:
+      - pasid_refactor_net
+    environment:
+      - DOCKER_ENV=${DOCKER_ENV:-true}
+      - S1_1_NAME_TAG=${S1_1_NAME_TAG:-Service1.1_Nó02}
+      - S1_1_LISTEN_PORT=${S1_1_LISTEN_PORT}
+      - S1_1_PROC_TIME=${S1_1_PROC_TIME}
+      - S1_1_TRANSIT_TIME_TO_NEXT=${S1_1_TRANSIT_TIME_TO_NEXT}
+      - SOURCE_SERVICE_NAME=${SOURCE_SERVICE_NAME:-source} # Para --final_target_host
+      - SOURCE_LISTEN_PORT_CONTAINER=${SOURCE_LISTEN_PORT_CONTAINER} # Para --final_target_port
+      # Variáveis do orquestrador para montar os argumentos de comando
+      - EXPERIMENT_S1_1_NEXT_HOST_CMD_ARG
+      - EXPERIMENT_S1_1_NEXT_PORT_CMD_ARG
+      - EXPERIMENT_S1_1_IS_FINAL_CMD_FLAG
+      - EXPERIMENT_S1_1_HAS_IA_CMD_FLAG
+      # Nomes/Portas que podem ser parte de NEXT_HOST/NEXT_PORT
+      - S1_2_SERVICE_NAME=${S1_2_SERVICE_NAME:-s1_2}
+      - S1_2_LISTEN_PORT=${S1_2_LISTEN_PORT}
+      - LB2_SERVICE_NAME=${LB2_SERVICE_NAME:-lb2}
+      - LB2_LISTEN_PORT=${LB2_LISTEN_PORT}
+
+  s1_2:
+    build: .
+    profiles: ["s1_2_active"] # Ativo para cenários de 2, 3, 4 serviços
+    container_name: pasid_refactor_s1_2
+    command: >
+      python service.py
+      --name "${S1_2_NAME_TAG:-Service1.2_Nó02}"
+      --port ${S1_2_LISTEN_PORT}
+      --ptime_no_ia ${S1_2_PROC_TIME}
+      ${S1_2_NEXT_HOST_CMD_ARG}   # Ex: --next_host nome_servico
+      ${S1_2_NEXT_PORT_CMD_ARG}   # Ex: --next_port porta
+      ${S1_2_IS_FINAL_CMD_FLAG}   # Ex: --is_final ou vazio
+      ${S1_2_HAS_IA_CMD_FLAG}     # Ex: --has_ia ou vazio (deve ser vazio para s1_2)
+      --transit_time ${S1_2_TRANSIT_TIME_TO_NEXT}
+      --final_target_host "${SOURCE_SERVICE_NAME:-source}"
+      --final_target_port ${SOURCE_LISTEN_PORT_CONTAINER}
+    networks:
+      - pasid_refactor_net
+    environment:
+      - DOCKER_ENV=${DOCKER_ENV:-true}
+      - S1_2_NAME_TAG=${S1_2_NAME_TAG:-Service1.2_Nó02}
+      - S1_2_LISTEN_PORT=${S1_2_LISTEN_PORT}
+      - S1_2_PROC_TIME=${S1_2_PROC_TIME}
+      - S1_2_TRANSIT_TIME_TO_NEXT=${S1_2_TRANSIT_TIME_TO_NEXT}
+      - SOURCE_SERVICE_NAME=${SOURCE_SERVICE_NAME:-source}
+      - SOURCE_LISTEN_PORT_CONTAINER=${SOURCE_LISTEN_PORT_CONTAINER}
+      - LB2_SERVICE_NAME=${LB2_SERVICE_NAME:-lb2} 
+      - LB2_LISTEN_PORT=${LB2_LISTEN_PORT}
+      # Variáveis do orquestrador
+      - S1_2_NEXT_HOST_CMD_ARG
+      - S1_2_NEXT_PORT_CMD_ARG
+      - S1_2_IS_FINAL_CMD_FLAG
+      - S1_2_HAS_IA_CMD_FLAG
+
+  lb2:
+    build: .
+    profiles: ["lb2_s2_1_active"] # Ativo para cenários de 3, 4 serviços (s2_1 sempre ativo com lb2)
+    container_name: pasid_refactor_lb2
+    command: >
+      python loadbalancer.py
+      --name "${LB2_NAME_TAG:-LoadBalancer2_Nó03}"
+      --port ${LB2_LISTEN_PORT}
+      --ptime ${LB2_PROC_TIME}
+      --targets "${EXPERIMENT_LB2_TARGETS}" # Definido pelo orquestrador
+    networks:
+      - pasid_refactor_net
+    environment:
+      - DOCKER_ENV=${DOCKER_ENV:-true}
+      - LB2_NAME_TAG=${LB2_NAME_TAG:-LoadBalancer2_Nó03}
+      - LB2_LISTEN_PORT=${LB2_LISTEN_PORT}
+      - LB2_PROC_TIME=${LB2_PROC_TIME}
+      - EXPERIMENT_LB2_TARGETS # Do orquestrador
+      # Nomes/Portas para substituição em EXPERIMENT_LB2_TARGETS
+      - S2_1_SERVICE_NAME=${S2_1_SERVICE_NAME:-s2_1}
+      - S2_1_LISTEN_PORT=${S2_1_LISTEN_PORT}
+      - S2_2_SERVICE_NAME=${S2_2_SERVICE_NAME:-s2_2} 
+      - S2_2_LISTEN_PORT=${S2_2_LISTEN_PORT}
+
+  _s2_common_env: &s2_common_env # Configurações comuns para serviços S2
+    DOCKER_ENV: ${DOCKER_ENV:-true}
+    SOURCE_SERVICE_NAME: ${SOURCE_SERVICE_NAME:-source}
+    SOURCE_LISTEN_PORT_CONTAINER: ${SOURCE_LISTEN_PORT_CONTAINER}
+    S2_PROC_TIME: ${S2_PROC_TIME} # ptime_no_ia para serviços S2
+    S2_TRANSIT_TIME: ${S2_TRANSIT_TIME}
+    S2_BERT_MODEL_NAME: ${S2_BERT_MODEL_NAME}
+    CAMINHO_MODELO_BERT_CONTAINER: ${CAMINHO_MODELO_BERT_CONTAINER}
+    S2_NUM_CLASSES: ${S2_NUM_CLASSES}
+    S2_MAX_LEN: ${S2_MAX_LEN}
+    S2_STATE_DICT_FILENAME: ${S2_STATE_DICT_FILENAME}
+
+  s2_1:
+    build: .
+    profiles: ["lb2_s2_1_active"] # Ativo para cenários de 3, 4 serviços
+    container_name: pasid_refactor_s2_1
+    command: > # s2_1 é sempre final e com IA quando ativo
+      python service.py
+      --name "${S2_1_NAME_TAG:-Service2.1_Nó03}"
+      --port ${S2_1_LISTEN_PORT}
+      --ptime_no_ia ${S2_PROC_TIME} --is_final --has_ia
+      --final_target_host "${SOURCE_SERVICE_NAME:-source}"
+      --final_target_port ${SOURCE_LISTEN_PORT_CONTAINER}
+      --transit_time ${S2_TRANSIT_TIME}
+      --bert_model_name "${S2_BERT_MODEL_NAME}"
+      --model_path "${CAMINHO_MODELO_BERT_CONTAINER}"
+      --num_classes ${S2_NUM_CLASSES} --max_len ${S2_MAX_LEN}
+      --state_dict_filename "${S2_STATE_DICT_FILENAME}"
+    networks: [pasid_refactor_net]
+    environment:
+      <<: *s2_common_env
+      S2_1_NAME_TAG: ${S2_1_NAME_TAG:-Service2.1_Nó03}
+      S2_1_LISTEN_PORT: ${S2_1_LISTEN_PORT}
+    volumes:
+      - ./logs:/app/logs
+      - ${CAMINHO_MODELO_BERT_HOST_ENV}:${CAMINHO_MODELO_BERT_CONTAINER}:ro
+      - huggingface_cache_refactor:/root/.cache/huggingface
+
+  s2_2:
+    build: .
+    profiles: ["s2_2_active"] # Ativo apenas para cenário de 4 serviços
+    container_name: pasid_refactor_s2_2
+    command: > # s2_2 é sempre final e com IA quando ativo
+      python service.py
+      --name "${S2_2_NAME_TAG:-Service2.2_Nó03}"
+      --port ${S2_2_LISTEN_PORT}
+      --ptime_no_ia ${S2_PROC_TIME} --is_final --has_ia
+      --final_target_host "${SOURCE_SERVICE_NAME:-source}"
+      --final_target_port ${SOURCE_LISTEN_PORT_CONTAINER}
+      --transit_time ${S2_TRANSIT_TIME}
+      --bert_model_name "${S2_BERT_MODEL_NAME}"
+      --model_path "${CAMINHO_MODELO_BERT_CONTAINER}"
+      --num_classes ${S2_NUM_CLASSES} --max_len ${S2_MAX_LEN}
+      --state_dict_filename "${S2_STATE_DICT_FILENAME}"
+    networks: [pasid_refactor_net]
+    environment:
+      <<: *s2_common_env
+      S2_2_NAME_TAG: ${S2_2_NAME_TAG:-Service2.2_Nó03}
+      S2_2_LISTEN_PORT: ${S2_2_LISTEN_PORT}
+    volumes:
+      - ./logs:/app/logs
+      - ${CAMINHO_MODELO_BERT_HOST_ENV}:${CAMINHO_MODELO_BERT_CONTAINER}:ro
+      - huggingface_cache_refactor:/root/.cache/huggingface
+
+networks:
+  pasid_refactor_net:
+    driver: bridge
+
+volumes:
+  huggingface_cache_refactor:
+  logs: 
+  
